@@ -155,6 +155,20 @@
       .marquee-track b{color:var(--gold);font-weight:700}
       @keyframes scroll-x{to{transform:translateX(-50%)}}
 
+      /* ---------- brands marquee ---------- */
+      .brands{padding:3.4rem 0 3.8rem}
+      .brands-title{font-family:var(--font-mono);font-size:.78rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);text-align:center;margin-bottom:1.9rem;display:flex;align-items:center;justify-content:center;gap:1rem}
+      .brands-title::before,.brands-title::after{content:"";height:1px;width:56px;flex:none}
+      .brands-title::before{background:linear-gradient(90deg,transparent,var(--gold))}
+      .brands-title::after{background:linear-gradient(90deg,var(--gold),transparent)}
+      .brands-marquee{overflow:hidden;overflow-x:clip;max-width:100vw;-webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)}
+      .brands-track{display:flex;width:max-content;animation:scroll-x 32s linear infinite}
+      .brands-marquee:hover .brands-track{animation-play-state:paused}
+      .brand-group{display:flex;gap:1.1rem;padding-right:1.1rem;align-items:center}
+      .brand-badge{font-family:var(--font-display);font-weight:700;font-size:1.08rem;color:var(--ink);white-space:nowrap;border:1px solid rgba(232,179,60,.35);background:linear-gradient(160deg,var(--panel-2),var(--panel));border-radius:999px;padding:.85rem 1.7rem;display:inline-flex;align-items:center;gap:.7rem}
+      .brand-badge i{font-style:normal;color:var(--gold);font-size:.68rem}
+      @media (max-width:640px){.brands{padding:2.8rem 0 3rem}.brand-badge{font-size:.97rem;padding:.75rem 1.35rem}}
+
       /* ---------- sections ---------- */
       section{padding:5.5rem 0}
       .sec-head{max-width:44rem;margin-bottom:3rem}
@@ -691,6 +705,31 @@
                 <div class="did"><span>Content</span><span>Canva design</span><span>Rentals</span></div>
               </div>
             </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- BRANDS -->
+      <section class="brands" aria-label="Brands I've worked with">
+        <div class="wrap">
+          <p class="brands-title">Brands I've worked with</p>
+        </div>
+        <div class="brands-marquee">
+          <div class="brands-track">
+            <div class="brand-group">
+              <span class="brand-badge"><i aria-hidden="true">◆</i>MaGéAu Naturel</span>
+              <span class="brand-badge"><i aria-hidden="true">◆</i>Mind Body Beyond Wellness Center</span>
+              <span class="brand-badge"><i aria-hidden="true">◆</i>Amar Bangladesh Foundation</span>
+              <span class="brand-badge"><i aria-hidden="true">◆</i>Farmer Group Ltd.</span>
+              <span class="brand-badge"><i aria-hidden="true">◆</i>Home Finder Rental</span>
+            </div>
+            <div class="brand-group" aria-hidden="true">
+              <span class="brand-badge"><i aria-hidden="true">◆</i>MaGéAu Naturel</span>
+              <span class="brand-badge"><i aria-hidden="true">◆</i>Mind Body Beyond Wellness Center</span>
+              <span class="brand-badge"><i aria-hidden="true">◆</i>Amar Bangladesh Foundation</span>
+              <span class="brand-badge"><i aria-hidden="true">◆</i>Farmer Group Ltd.</span>
+              <span class="brand-badge"><i aria-hidden="true">◆</i>Home Finder Rental</span>
+            </div>
           </div>
         </div>
       </section>
@@ -1390,6 +1429,43 @@
           }, { passive: true });
           window.addEventListener("resize", revSync);
           revSync();
+
+          /* auto-scroll: advance every 4.5s in a loop; pauses while the reader
+             hovers, touches/swipes, focuses controls, or navigates manually */
+          if (!reduced && revItems.length > 1) {
+            var revHoldUntil = 0, revHoverHold = false, revTouchHold = false, revInView = false;
+            var revControls = revTrack.parentElement.querySelector(".rev-controls");
+            [revTrack, revControls].forEach(function(el){
+              if (!el) return;
+              el.addEventListener("pointerenter", function(){ revHoverHold = true; });
+              el.addEventListener("pointerleave", function(){ revHoverHold = false; revHoldUntil = Date.now() + 1200; });
+              el.addEventListener("focusin", function(){ revHoverHold = true; });
+              el.addEventListener("focusout", function(){ revHoverHold = false; revHoldUntil = Date.now() + 1200; });
+            });
+            revTrack.addEventListener("pointerdown", function(){ revTouchHold = true; });
+            var revTouchEnd = function(){
+              if (revTouchHold) { revTouchHold = false; revHoldUntil = Date.now() + 2500; }
+            };
+            window.addEventListener("pointerup", revTouchEnd);
+            window.addEventListener("pointercancel", revTouchEnd);
+            revTrack.addEventListener("wheel", function(){ revHoldUntil = Date.now() + 2500; }, { passive: true });
+            revPrev.addEventListener("click", function(){ revHoldUntil = Date.now() + 6000; });
+            revNext.addEventListener("click", function(){ revHoldUntil = Date.now() + 6000; });
+            revDots.addEventListener("click", function(){ revHoldUntil = Date.now() + 6000; });
+            if ("IntersectionObserver" in window) {
+              new IntersectionObserver(function(entries){
+                revInView = entries[0].isIntersecting;
+              }, { threshold: 0.2 }).observe(revTrack);
+            } else { revInView = true; }
+            setInterval(function(){
+              if (document.hidden || !revInView || revHoverHold || revTouchHold) return;
+              if (Date.now() < revHoldUntil) return;
+              var n = revPositions();
+              if (n <= 1) return;
+              var idx = revIndex();
+              revGo(idx >= n - 1 ? 0 : idx + 1);
+            }, 4500);
+          }
         }
 
         /* contact form -> prefilled email */
